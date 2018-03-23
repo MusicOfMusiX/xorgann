@@ -27,8 +27,8 @@ namespace NN3
         private double EvaluateFitness(NeuralNet net) //Probably the 'Main' part of the class; The real 'running & testing happens here'
             {
             double ret;
-            net.Run(1,0)
-
+            net.Run(1,0);
+            //Git commit test(?)
 
             return ret;
             }
