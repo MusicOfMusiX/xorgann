@@ -28,7 +28,7 @@ namespace NN3
             {
             double ret;
             net.Run(1,0);
-            //Git commit test(?)
+            //Git commit test(?) #2!!!
 
             return ret;
             }
