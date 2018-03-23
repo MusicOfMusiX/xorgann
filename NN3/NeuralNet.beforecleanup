@@ -1,0 +1,137 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace NN3
+    {
+    class NeuralNet
+        {
+        private int NUMBER_OF_LAYERS;
+        private const int IDENTITY = 1;
+        private List<int> NUMBER_OF_NODES = new List<int>();
+        private List<List<List<double>>> MATRICIES = new List<List<List<double>>>();
+
+        Random rand = new Random();
+
+        /*
+        const int LAYER0 = 2;
+        const int LAYER1 = 4;
+        const int LAYER2 = 3;
+        const int LAYER3 = 1;
+        */
+
+        public bool ACTIVATION = true;
+
+        public NeuralNet(params int[] nodes)
+            {
+            NUMBER_OF_LAYERS = nodes.Count();
+            NUMBER_OF_NODES.Add(IDENTITY);
+            for (int i = 0; i < NUMBER_OF_LAYERS; i++)
+                {
+                NUMBER_OF_NODES.Add(nodes[i]);
+                }
+            }
+
+        public void GenerateWeights()
+            {
+            for (int i = 0; i < NUMBER_OF_LAYERS; i++)
+                {
+                List<List<double>> jList = new List<List<double>>();
+                for (int j = 0; j < NUMBER_OF_NODES[i]; j++)
+                    {
+                    List<double> kList = new List<double>();
+                    for (int k = 0; k < NUMBER_OF_NODES[i + 1]; k++)
+                        {
+                        kList.Add(rand.NextDouble());
+                        }
+                    jList.Add(kList);
+                    }
+                MATRICIES.Add(jList);
+                }
+            }
+
+        private List<double> Multi(ref List<double> res, List<List<double>> weight)
+            {
+            List<double> ret = new List<double>();
+            int shared = res.Count();
+            Console.WriteLine("shared: "+shared);
+            if (shared != weight.Count())
+                { throw new System.ArgumentException("Matrix 1 col and Matrix 2 row do not match!");}
+            int weightcol = weight[0].Count();
+
+            for (int i = 0; i < weightcol; i++)
+                {
+                double element = 0;
+                for (int j = 0; j < shared; j++)
+                    {
+                    element += res[j] * weight[j][i];
+                    }
+                ret.Add(element);
+                }
+
+            return ret;
+            }
+
+        private void Activate(ref List<double> res)
+            {
+            for (int i = 0; i < res.Count(); i++)
+                {
+                res[i] = 1/(1 + Math.Exp(res[i]*-1));
+                }
+            }
+
+        public void Start()
+            {
+            //ALL MATRIX ARRAYS ARE [ROW/Y][COL/X]!!
+            List<double> INPUT = new List<double>();
+
+            /* //The OLD METHOD
+            double[,] INPUT = new double[IDENTITY, ] { { 1, 2 } };
+            double[,] W0 = new double[LAYER0, LAYER1] { { 4, 3, 2, 1 }, { 5, 6, 7, 8 } };
+            double[,] W1 = new double[LAYER1, LAYER2] { { 1, 2, 3 }, { 4, 5, 6 }, { 3, 2, 1 }, { 6, 5, 4 } };
+            double[,] W2 = new double[LAYER2, LAYER3] { { 1.3 }, { 2.2 }, { 3.1 } };
+
+            List<double[,]> MATRICIES = new List<double[,]>();
+            MATRICIES.Add(INPUT, W0, W1, W2);
+            */
+
+            List<double> res = new List<double>();
+            res = MATRICIES[0][0];
+
+            for (int i = 0; i <NUMBER_OF_LAYERS-1; i++)
+                {
+                res = Multi(ref res, MATRICIES[i+1]); 
+                }
+
+            if (ACTIVATION) { Activate(ref res); }
+
+            for (int i = 0; i < res.Count(); i++)
+                {
+                Console.WriteLine("res @ index "+i+": "+res[i]);
+                }
+
+            //Just for debugging
+            Console.WriteLine("Finished!");
+            Console.ReadLine();
+            }
+
+        static void Main(string[] args)
+            {
+            NeuralNet net = new NeuralNet(2,4,1);
+            net.GenerateWeights();
+            net.Start();
+            }
+        }
+    }
+
+public static class ListExtenstions
+    {
+    public static void Add<T>(this List<T> list, params T[] elements)
+        {
+        list.AddRange(elements);
+        }
+    }
+
+
