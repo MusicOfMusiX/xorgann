@@ -32,7 +32,7 @@ namespace NN3
 
         public bool ACTIVATION = true;
 
-        public NeuralNet(params int[] nodes)
+        public NeuralNet(int[] nodes)
             {
             NUMBER_OF_LAYERS = nodes.Count();
             //NUMBER_OF_NODES.Add(IDENTITY); //Since the first node's (INPUT) row is always 1 and is not provided as an argument in the constructor!
@@ -45,7 +45,7 @@ namespace NN3
 
         public void GenerateWeights(Random rand)
             {
-            Console.WriteLine("\n\n");
+            //Console.WriteLine("\n\n");
             //The input matrix is assigned some random values as well. These will be overwritten later. - NOPE.
             //FIXED THE CODE, [MATRICIES] NOW DOES NOT CONTAIN THE INPUT MATRIX. JUST DIDN'T NEED IT IN THE FIRST PLACE1
             for (int i = 0; i < NUMBER_OF_LAYERS-1; i++)
@@ -56,7 +56,8 @@ namespace NN3
                     List<double> kList = new List<double>();
                     for (int k = 0; k < NUMBER_OF_NODES[i + 1]; k++)
                         {
-                        double w = rand.NextDouble();
+                        //double w = (rand.NextDouble()-0.5)*2; //For tanh
+                        double w = rand.NextDouble();   //For sigmoid
                         kList.Add(w);
 #if DEBUG
                         Console.WriteLine("Weight config: " + w);
@@ -109,8 +110,8 @@ namespace NN3
             {
             for (int i = 0; i < mat.Count(); i++)
                 {
-                mat[i] = 1/(1 + Math.Exp(mat[i]*-1));
-                //mat[i] = Math.Tanh(mat[i]);
+                mat[i] = 1/(1 + Math.Exp(mat[i]*-1));   //Sigmoid, 0 ~ 1
+                //mat[i] = Math.Tanh(mat[i]);   //Tanh, -1 ~ 1
                 }
             }
         }
