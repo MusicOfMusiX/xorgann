@@ -42,7 +42,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NeuralNet.cs" />
+    <Compile Include="src\Extentions.cs" />
+    <Compile Include="src\GeneticOptimiser.cs" />
+    <Compile Include="src\NeuralNet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
