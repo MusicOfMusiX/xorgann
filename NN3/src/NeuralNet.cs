@@ -12,10 +12,21 @@ namespace NN3
     {
     class NeuralNet
         {
-        private int NUMBER_OF_LAYERS;
-        private const int IDENTITY = 1;
-        private List<int> NUMBER_OF_NODES = new List<int>();
-        private List<List<List<double>>> MATRICIES = new List<List<List<double>>>();
+        public int NUMBER_OF_LAYERS;
+        public List<int> NUMBER_OF_NODES = new List<int>();
+
+        //THE MOST IMPORTANT LIST!! - Mat# - Row# - Col# Order.
+        public List<List<List<double>>> MATRICIES = new List<List<List<double>>>(); //A.K.A. WEIGHTS
+
+        public void SetWeight(int mat, int row, int col, double val) //DON'T BE CONFUSED!!
+            {
+            MATRICIES[mat][row][col] = val;
+            }
+
+        public double GetWeight(int mat, int row, int col)
+            {
+            return MATRICIES[mat][row][col];
+            }
 
         public double FITNESS;
 
@@ -24,7 +35,7 @@ namespace NN3
         public NeuralNet(params int[] nodes)
             {
             NUMBER_OF_LAYERS = nodes.Count();
-            NUMBER_OF_NODES.Add(IDENTITY); //Since the first node's (INPUT) row is always 1 and is not provided as an argument in the constructor!
+            //NUMBER_OF_NODES.Add(IDENTITY); //Since the first node's (INPUT) row is always 1 and is not provided as an argument in the constructor!
             //Therefore, if there are n number of layers, NUMBER_OF_LAYERS = n, while NUMBER_OF_NODES will have n+1 elements
             for (int i = 0; i < NUMBER_OF_LAYERS; i++)
                 {
@@ -35,8 +46,9 @@ namespace NN3
         public void GenerateWeights(Random rand)
             {
             Console.WriteLine("\n\n");
-            //The input matrix is assigned some random values as well. These will be overwritten later.
-            for (int i = 0; i < NUMBER_OF_LAYERS; i++)
+            //The input matrix is assigned some random values as well. These will be overwritten later. - NOPE.
+            //FIXED THE CODE, [MATRICIES] NOW DOES NOT CONTAIN THE INPUT MATRIX. JUST DIDN'T NEED IT IN THE FIRST PLACE1
+            for (int i = 0; i < NUMBER_OF_LAYERS-1; i++)
                 {
                 List<List<double>> jList = new List<List<double>>();
                 for (int j = 0; j < NUMBER_OF_NODES[i]; j++)
@@ -64,11 +76,14 @@ namespace NN3
 
             for (int i = 0; i < NUMBER_OF_LAYERS - 1; i++)
                 {
-                ret = Multi(ref ret, MATRICIES[i + 1]);
+                ret = Multi(ref ret, MATRICIES[i]);
                 if (ACTIVATION) { Activate(ref ret); }
                 }
             return ret;
             }
+        /*
+        public List<double> Encode() //NO REAL NEED FOR ENCODING; JUST ACCESS WEIGHTS DIRECTLY VIA LISTS!!
+        */
 
         private List<double> Multi(ref List<double> res, List<List<double>> weight)
             {
