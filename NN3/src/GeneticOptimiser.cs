@@ -85,11 +85,11 @@ Console.WriteLine("##########################GENERATION #" + i + "##############
             //List<NeuralNet> ret = nets; //THIS DOES NOT CREATE A COPY!!! THIS JUST PASSES A REFERENCE; THE DESTINATION IS THE SAME!!
             for (int i = 0; i < nets.Count(); i++)
                 {
-                for (int mat = 0; mat < nets[i].MATRICIES.Count(); mat++)
+                for (int mat = 0; mat < nets[i].MATRICES.Count(); mat++)
                     {
-                    for (int row = 0; row < nets[i].MATRICIES[mat].Count(); row++)
+                    for (int row = 0; row < nets[i].MATRICES[mat].Count(); row++)
                         {
-                        for (int col = 0; col < nets[i].MATRICIES[mat][row].Count(); col++)
+                        for (int col = 0; col < nets[i].MATRICES[mat][row].Count(); col++)
                             {
                             if (rand.NextDouble() < MUTATE_CHANCE)
                                 {
@@ -111,11 +111,11 @@ Console.WriteLine("##########################GENERATION #" + i + "##############
                 NeuralNet offspring = new NeuralNet(NODECONFIG);
                 offspring.GenerateWeights(rand); //I DON'T LIKE THIS. BUT THIS WILL DO FOR NOW...
                 
-                for(int mat=0;mat<offspring.MATRICIES.Count();mat++)
+                for(int mat=0;mat<offspring.MATRICES.Count();mat++)
                     {
-                    for(int row=0;row<offspring.MATRICIES[mat].Count();row++)
+                    for(int row=0;row<offspring.MATRICES[mat].Count();row++)
                         {
-                        for(int col=0;col<offspring.MATRICIES[mat][row].Count();col++)
+                        for(int col=0;col<offspring.MATRICES[mat][row].Count();col++)
                             {
                             if(rand.NextDouble() < CROSSOVER_CHANCE)
                                 {
@@ -147,20 +147,20 @@ Console.WriteLine("Population of size " + count + " create OK!");
             return ret;
             }
 
-        public List<NeuralNet> SortFitness(List<NeuralNet> netlist)
+        public List<NeuralNet> SortFitness(List<NeuralNet> nets)
             {
             //Create list of nets to order in fitness
-            for (int i = 0; i < netlist.Count(); i++)
+            for (int i = 0; i < nets.Count(); i++)
                 {
 #if DEBUG
-                Console.WriteLine("\n" + "Testing network #" + i);
+Console.WriteLine("\n" + "Testing network #" + i);
 #endif
-                EvaluateFitness(netlist[i]);
+                EvaluateFitness(nets[i]);
                 }
 
-            netlist = netlist.OrderBy(o => o.FITNESS).ToList(); //AHHHHHH!!! THIS IS NOT A CLASS!! IT IS A *LIST*!!!! SO RE-ASSIGNING IS ESSENTIAL!!!
+            //nets = nets.OrderBy(o => o.FITNESS).ToList(); //REMEBER THE SUFFERING BECAUSE OF THIS!!!
 
-            return netlist;
+            return nets.OrderBy(o => o.FITNESS).ToList(); //You know what? a List<T> is also a class. It is also automatically passed by reference to methods.
             }
 
         private void EvaluateFitness(NeuralNet net) //Probably the 'Main' part of the class; The real 'running & testing happens here'
@@ -170,13 +170,13 @@ Console.WriteLine("Population of size " + count + " create OK!");
             //XOR - SPECIFIC CODE!!!
             double diff = 0;
 #if DEBUG
-            Console.WriteLine("Dataset count: " + NUMBER_OF_DATASETS);
+Console.WriteLine("Dataset count: " + NUMBER_OF_DATASETS);
 #endif
             for (int i = 0; i < NUMBER_OF_DATASETS; i++)
                 {
                 List<double> outcome = net.Run(XOR_INPUT.GetRow(i).ToList());
 #if DEBUG
-                Console.WriteLine("Result difference: " + (XOR_IDEAL[i, 0] - outcome[0]));
+Console.WriteLine("Result difference: " + (XOR_IDEAL[i, 0] - outcome[0]));
 #endif
                 //diff += Math.Abs(XOR_IDEAL[i, 0] - outcome[0]);
                 //JUST LIKE THE STANDARD DEVIATION PROBLEM, USING ABS. VALUES MAY NOT BE A GOOD CHOICE.
@@ -185,7 +185,7 @@ Console.WriteLine("Population of size " + count + " create OK!");
             //SMALLER THE BETTER!
             net.FITNESS = (diff / NUMBER_OF_DATASETS); //Average difference
 #if DEBUG
-            Console.WriteLine("Result Average Fitness: " + net.FITNESS);
+Console.WriteLine("Result Average Fitness: " + net.FITNESS);
 #endif
             }
         private void EvaluatePopulation(List<NeuralNet> nets)

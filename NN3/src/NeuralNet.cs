@@ -16,16 +16,16 @@ namespace NN3
         public List<int> NUMBER_OF_NODES = new List<int>();
 
         //THE MOST IMPORTANT LIST!! - Mat# - Row# - Col# Order.
-        public List<List<List<double>>> MATRICIES = new List<List<List<double>>>(); //A.K.A. WEIGHTS
+        public List<List<List<double>>> MATRICES = new List<List<List<double>>>(); //A.K.A. WEIGHTS
 
         public void SetWeight(int mat, int row, int col, double val) //DON'T BE CONFUSED!!
             {
-            MATRICIES[mat][row][col] = val;
+            MATRICES[mat][row][col] = val;
             }
 
         public double GetWeight(int mat, int row, int col)
             {
-            return MATRICIES[mat][row][col];
+            return MATRICES[mat][row][col];
             }
 
         public double FITNESS;
@@ -47,7 +47,7 @@ namespace NN3
             {
             //Console.WriteLine("\n\n");
             //The input matrix is assigned some random values as well. These will be overwritten later. - NOPE.
-            //FIXED THE CODE, [MATRICIES] NOW DOES NOT CONTAIN THE INPUT MATRIX. JUST DIDN'T NEED IT IN THE FIRST PLACE1
+            //FIXED THE CODE, [MATRICES] NOW DOES NOT CONTAIN THE INPUT MATRIX. JUST DIDN'T NEED IT IN THE FIRST PLACE1
             for (int i = 0; i < NUMBER_OF_LAYERS-1; i++)
                 {
                 List<List<double>> jList = new List<List<double>>();
@@ -60,12 +60,12 @@ namespace NN3
                         double w = rand.NextDouble();   //For sigmoid
                         kList.Add(w);
 #if DEBUG
-                        Console.WriteLine("Weight config: " + w);
+Console.WriteLine("Weight config: " + w);
 #endif
                         }
                     jList.Add(kList);
                     }
-                MATRICIES.Add(jList);
+                MATRICES.Add(jList);
                 }
             }
 
@@ -77,7 +77,7 @@ namespace NN3
 
             for (int i = 0; i < NUMBER_OF_LAYERS - 1; i++)
                 {
-                ret = Multi(ref ret, MATRICIES[i]);
+                ret = Multi(ref ret, MATRICES[i]);
                 if (ACTIVATION) { Activate(ref ret); }
                 }
             return ret;
