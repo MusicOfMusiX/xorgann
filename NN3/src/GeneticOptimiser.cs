@@ -17,10 +17,10 @@ namespace NN3
         public static int POPULATION_SIZE = 50;
         public static int GENERATIONS = 100;
 
-        public static double MUTATE_CHANCE = 0.3;       //Increase diversity
-        public static double CROSSOVER_CHANCE = 0.5;    //Unlike muatate chance, this determines whether an individual node will be crossed;
-                                                        //instead of whether crossover itself should happen across the entire population.
-        public static double UNDERDOG_SURVIVAL = 0.3;   //Increase diversity
+        //NOT THE CHANCES OF MUTATION/CROSSOVER HAPPENING ENTIRELY ACROSS A POPULATION; BUT RATHER THE CHANCE OF AN INDIVIDUAL NODE UNDERGOING MUTAION/CROSSOVER.
+        public static double MUTATE_CHANCE = 0.2;
+        public static double CROSSOVER_CHANCE = 0.5;    
+        public static double UNDERDOG_SURVIVAL = 0.05;   //Increase diversity
         public static int SURVIVORS = 3;                //Must be larger than 0; but equal or less than the population size.
 
         /*ONLY WEIGHTS ARE EVOLVED; THE TOPOLOGY IS UNTOUCHED THROUGHOUT THE ENTIRE PROCESS*/
@@ -35,7 +35,9 @@ namespace NN3
 
             for (int i = 0; i < GENERATIONS; i++)
                 {
-                //Console.WriteLine("##########################GENERATION #" + i + "##########################\n\n");
+#if DEBUG
+Console.WriteLine("##########################GENERATION #" + i + "##########################\n\n");
+#endif
                 pop = optimiser.Evolve(pop);
                 optimiser.EvaluatePopulation(pop);
                 }
@@ -60,71 +62,63 @@ namespace NN3
         public List<NeuralNet> Evolve(List<NeuralNet> nets)
             {
             List<NeuralNet> ret = new List<NeuralNet>();
-            ret = SortFitness(nets);
-            ret = Cutoff(ret);
-            ret = Crossover(ret,POPULATION_SIZE);
-
-            ret = Mutate(ret);
-            return ret;
+            nets = SortFitness(nets);
+            Cutoff(nets);
+            Crossover(nets, POPULATION_SIZE);
+            Mutate(nets);
+            return nets;
             }
 
-        private List<NeuralNet> Cutoff(List<NeuralNet> nets)
+        private void Cutoff(List<NeuralNet> nets)
             {
-            List<NeuralNet> ret = nets;
             for(int i=nets.Count()-1;i>=SURVIVORS;i--)  //Lists automatically update after a RemoveAt(); Therefore interate from the back!
                 {
-                if(rand.NextDouble()>UNDERDOG_SURVIVAL)
+                if(rand.NextDouble() > UNDERDOG_SURVIVAL) //We REMOVE when NOT underdog! Don't be confused!
                     {
-                    ret.RemoveAt(i);
+                    nets.RemoveAt(i);
                     }          
                 }
-            return ret;
             }
 
-        private List<NeuralNet> Mutate(List<NeuralNet> nets)
+        private void Mutate(List<NeuralNet> nets)
             {
-            List<NeuralNet> ret = nets; //THIS DOES NOT CREATE A COPY!!! THIS JUST PASSES A REFERENCE; THE DESTINATION IS THE SAME!!
-            for (int i = 0; i < ret.Count(); i++)
+            //List<NeuralNet> ret = nets; //THIS DOES NOT CREATE A COPY!!! THIS JUST PASSES A REFERENCE; THE DESTINATION IS THE SAME!!
+            for (int i = 0; i < nets.Count(); i++)
                 {
-                for (int mat = 0; mat < ret[i].MATRICIES.Count(); mat++)
+                for (int mat = 0; mat < nets[i].MATRICES.Count(); mat++)
                     {
-                    for (int row = 0; row < ret[i].MATRICIES[mat].Count(); row++)
+                    for (int row = 0; row < nets[i].MATRICES[mat].Count(); row++)
                         {
-                        for (int col = 0; col < ret[i].MATRICIES[mat][row].Count(); col++)
+                        for (int col = 0; col < nets[i].MATRICES[mat][row].Count(); col++)
                             {
                             if (rand.NextDouble() < MUTATE_CHANCE)
                                 {
-
-                                ret[i].SetWeight(mat, row, col, ret[i].GetWeight(mat,row,col)+rand.NextDouble()-0.5);
+                                nets[i].SetWeight(mat, row, col, nets[i].GetWeight(mat,row,col)+rand.NextDouble()-0.5);
                                 }
                             }
                         }
                     }
                 }
-            return ret;
             }
 
-        private List<NeuralNet> Crossover(List<NeuralNet> nets, int desiredsize)    //This will also fill the "Cutoffed" population w/ children.
+        private void Crossover(List<NeuralNet> nets, int desiredsize)    //This will also fill the "Cutoffed" population w/ children.
             {
-            List<NeuralNet> ret = nets; 
             int size = nets.Count();
-
-            for(int i=0;i<desiredsize-size;i++) //BE CAREFUL WHEN USING nets AND ret!! nets STAYS CONSTANT!!
+            for (int i=0;i< desiredsize-size; i++)
                 {
-                NeuralNet father = ret[0];
-                NeuralNet mother = ret[1];
+                NeuralNet father = nets[rand.Next(0,size)]; //Performance was better when selecting the parents as the top #1 and #2. HOWEVER, this will render the previously-selected underdogs useless; as they will have 0 chance of passing down their gene. (Unless the offspring gen. completely screws up and somehow the underdog makes in into top #2 in the next evolution)
+                NeuralNet mother = nets[rand.Next(0,size)];
                 NeuralNet offspring = new NeuralNet(NODECONFIG);
                 offspring.GenerateWeights(rand); //I DON'T LIKE THIS. BUT THIS WILL DO FOR NOW...
                 
-                for(int mat=0;mat<offspring.MATRICIES.Count();mat++)
+                for(int mat=0;mat<offspring.MATRICES.Count();mat++)
                     {
-                    for(int row=0;row<offspring.MATRICIES[mat].Count();row++)
+                    for(int row=0;row<offspring.MATRICES[mat].Count();row++)
                         {
-                        for(int col=0;col<offspring.MATRICIES[mat][row].Count();col++)
+                        for(int col=0;col<offspring.MATRICES[mat][row].Count();col++)
                             {
                             if(rand.NextDouble() < CROSSOVER_CHANCE)
                                 {
-
                                 offspring.SetWeight(mat,row,col,mother.GetWeight(mat,row,col));
                                 }
                             else
@@ -134,12 +128,10 @@ namespace NN3
                             }
                         }
                     }
-                ret.Add(offspring);
+                nets.Add(offspring);
                 }
-            return ret;
             }
 
-        
         public List<NeuralNet> CreatePopulation(int count, int[] nodeconfig)
             {
             List<NeuralNet> ret = new List<NeuralNet>();
@@ -150,26 +142,25 @@ namespace NN3
                 ret.Add(net);
                 }
 #if DEBUG
-            Console.WriteLine("Population of size " + count + " create OK!");
+Console.WriteLine("Population of size " + count + " create OK!");
 #endif
             return ret;
             }
 
-        public List<NeuralNet> SortFitness(List<NeuralNet> netlist)
+        public List<NeuralNet> SortFitness(List<NeuralNet> nets)
             {
-            List<NeuralNet> ret = new List<NeuralNet>(); //Create list of nets to order in fitness
-
-            for (int i = 0; i < netlist.Count(); i++)
+            //Create list of nets to order in fitness
+            for (int i = 0; i < nets.Count(); i++)
                 {
 #if DEBUG
-                Console.WriteLine("\n" + "Testing network #" + i);
+Console.WriteLine("\n" + "Testing network #" + i);
 #endif
-                EvaluateFitness(netlist[i]);
+                EvaluateFitness(nets[i]);
                 }
 
-            ret = netlist.OrderBy(o => o.FITNESS).ToList();
+            //nets = nets.OrderBy(o => o.FITNESS).ToList(); //REMEBER THE SUFFERING BECAUSE OF THIS!!!
 
-            return ret;
+            return nets.OrderBy(o => o.FITNESS).ToList(); //You know what? a List<T> is also a class. It is also automatically passed by reference to methods.
             }
 
         private void EvaluateFitness(NeuralNet net) //Probably the 'Main' part of the class; The real 'running & testing happens here'
@@ -179,18 +170,13 @@ namespace NN3
             //XOR - SPECIFIC CODE!!!
             double diff = 0;
 #if DEBUG
-            Console.WriteLine("Dataset count: " + NUMBER_OF_DATASETS);
+Console.WriteLine("Dataset count: " + NUMBER_OF_DATASETS);
 #endif
             for (int i = 0; i < NUMBER_OF_DATASETS; i++)
                 {
-                /*
-#if DEBUG
-                Console.WriteLine("Input count: " + XOR_INPUT.GetRow(i).ToList().Count());
-#endif          */
                 List<double> outcome = net.Run(XOR_INPUT.GetRow(i).ToList());
-
 #if DEBUG
-                Console.WriteLine("Result difference: " + (XOR_IDEAL[i, 0] - outcome[0]));
+Console.WriteLine("Result difference: " + (XOR_IDEAL[i, 0] - outcome[0]));
 #endif
                 //diff += Math.Abs(XOR_IDEAL[i, 0] - outcome[0]);
                 //JUST LIKE THE STANDARD DEVIATION PROBLEM, USING ABS. VALUES MAY NOT BE A GOOD CHOICE.
@@ -199,7 +185,7 @@ namespace NN3
             //SMALLER THE BETTER!
             net.FITNESS = (diff / NUMBER_OF_DATASETS); //Average difference
 #if DEBUG
-            Console.WriteLine("Result Average Fitness: " + net.FITNESS);
+Console.WriteLine("Result Average Fitness: " + net.FITNESS);
 #endif
             }
         private void EvaluatePopulation(List<NeuralNet> nets)
