@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 TRYING OUT OBJECTTIVE #2: XOR GATE SIMULATION!!!
 */
 
-namespace NN3
+namespace NN3.src
     {
     class NeuralNet
         {

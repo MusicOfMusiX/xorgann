@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NN3
+namespace NN3.src
     {
     class GeneticOptimiser
         {

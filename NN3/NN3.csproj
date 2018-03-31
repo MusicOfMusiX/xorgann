@@ -44,11 +44,17 @@
   <ItemGroup>
     <Compile Include="src\Extentions.cs" />
     <Compile Include="src\GeneticOptimiser.cs" />
+    <Compile Include="src\MnistImage.cs" />
     <Compile Include="src\NeuralNet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="test\train-images.idx3-ubyte" />
+    <None Include="test\train-labels.idx1-ubyte" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="train\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
