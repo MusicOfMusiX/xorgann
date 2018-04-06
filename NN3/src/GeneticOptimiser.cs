@@ -13,9 +13,9 @@ namespace NN3
         private static double[,] XOR_INPUT = { { 0.0, 0.0 }, { 1.0, 0.0 }, { 0.0, 1.0 }, { 1.0, 1.0 } };
         private static double[,] XOR_IDEAL = { { 0.0 }, { 1.0 }, { 1.0 }, { 0.0 } };
 
-        public static int[] NODECONFIG = new int[] { 2, 5, 4, 1 };
+        public static int[] NODECONFIG = new int[] { 2, 200, 3, 1 };
         public static int POPULATION_SIZE = 50;
-        public static int GENERATIONS = 100;
+        public static int GENERATIONS = 500;
 
         //NOT THE CHANCES OF MUTATION/CROSSOVER HAPPENING ENTIRELY ACROSS A POPULATION; BUT RATHER THE CHANCE OF AN INDIVIDUAL NODE UNDERGOING MUTAION/CROSSOVER.
         public static double MUTATE_CHANCE = 0.2;
