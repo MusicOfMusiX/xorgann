@@ -44,7 +44,7 @@
   <ItemGroup>
     <Compile Include="src\Extentions.cs" />
     <Compile Include="src\GeneticOptimiser.cs" />
-    <Compile Include="src\MnistImage.cs" />
+    <Compile Include="src\Mnist.cs" />
     <Compile Include="src\NeuralNet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

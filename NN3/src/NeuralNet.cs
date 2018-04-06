@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 /*
-TRYING OUT OBJECTTIVE #2: XOR GATE SIMULATION!!!
+TRYING OUT OBJECTTIVE #3: MNIST HANDWRITING CLASSIFICATION!!!
 */
 
 namespace NN3.src
@@ -30,7 +30,7 @@ namespace NN3.src
 
         public double FITNESS;
 
-        public bool ACTIVATION = true;
+        public bool ACTIVATION = false;
 
         public NeuralNet(int[] nodes)
             {

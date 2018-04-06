@@ -8,14 +8,11 @@ namespace NN3.src
     {
     class GeneticOptimiser
         {
-        //XOR DATASETS
-        private static int NUMBER_OF_DATASETS = 4;
-        private static double[,] XOR_INPUT = { { 0.0, 0.0 }, { 1.0, 0.0 }, { 0.0, 1.0 }, { 1.0, 1.0 } };
-        private static double[,] XOR_IDEAL = { { 0.0 }, { 1.0 }, { 1.0 }, { 0.0 } };
+        public static int NUMBER_OF_DATASETS = 60000;
 
-        public static int[] NODECONFIG = new int[] { 2, 5, 4, 1 };
-        public static int POPULATION_SIZE = 50;
-        public static int GENERATIONS = 100;
+        public static int[] NODECONFIG = new int[] { 28*28, 10 };
+        public static int POPULATION_SIZE = 30;
+        public static int GENERATIONS = 300; //This is static; the Test DB has 60000 samples!
 
         //NOT THE CHANCES OF MUTATION/CROSSOVER HAPPENING ENTIRELY ACROSS A POPULATION; BUT RATHER THE CHANCE OF AN INDIVIDUAL NODE UNDERGOING MUTAION/CROSSOVER.
         public static double MUTATE_CHANCE = 0.2;
@@ -33,36 +30,45 @@ namespace NN3.src
             
             List<NeuralNet> pop = optimiser.CreatePopulation(POPULATION_SIZE, NODECONFIG);
 
+            //Load Training Data
+            MnistTrainImages trainimages = new MnistTrainImages();
+            MnistTrainLabels trainlabels = new MnistTrainLabels();
+
             for (int i = 0; i < GENERATIONS; i++)
                 {
 #if DEBUG
 Console.WriteLine("##########################GENERATION #" + i + "##########################\n\n");
 #endif
-                pop = optimiser.Evolve(pop);
-                optimiser.EvaluatePopulation(pop);
+                pop = optimiser.Evolve(pop, i, trainimages, trainlabels);
+                //optimiser.EvaluatePopulation(pop);
                 }
-
-            Console.WriteLine("\n\n#####FINAL RESULTS#####");
-            for (int i = 0; i < NUMBER_OF_DATASETS; i++)
-                {
-                optimiser.TestBestNetwork(pop, XOR_INPUT.GetRow(i).ToList());
-                }
+            Console.WriteLine("FINISHED!");
+            optimiser.TestBestNetwork(pop,trainimages,trainlabels);
             Console.ReadLine();
             }
 
-        public void TestBestNetwork(List<NeuralNet> nets, List<double> input)
+        public void TestBestNetwork(List<NeuralNet> nets, MnistTrainImages images, MnistTrainLabels labels)
             {
-            //XOR EXCLUSIVE!!!
-            double ret;
-            List<double> tmp = nets[0].Run(input);
-            ret = tmp[0];
-            Console.WriteLine("Input: {" + input[0] + ", " + input[1] + "}, result: " + ret);
+            List<double> tmp = nets[0].Run(images.GetImage(100).ToList());
+            List<double> DB = images.GetImage(100).ToList();
+            Console.WriteLine("####FINAL TEST####\nInput: " + labels.GetLabel(100));
+            for (int i = 0; i < 28; i++)
+                {
+                for (int j = 0; j < 28; j++)
+                    {
+                    Console.Write(DB[i*28 + j] + " ");
+                    }
+                Console.Write("\n");
+                }
+            for (int i = 0; i < 10; i++)
+                {
+                Console.WriteLine(i + ": " + tmp[i]/(28*28));
+                }
             }
 
-        public List<NeuralNet> Evolve(List<NeuralNet> nets)
+        public List<NeuralNet> Evolve(List<NeuralNet> nets, int generation, MnistTrainImages images, MnistTrainLabels labels)
             {
-            List<NeuralNet> ret = new List<NeuralNet>();
-            nets = SortFitness(nets);
+            nets = SortFitness(nets, generation, images, labels);
             Cutoff(nets);
             Crossover(nets, POPULATION_SIZE);
             Mutate(nets);
@@ -106,8 +112,8 @@ Console.WriteLine("##########################GENERATION #" + i + "##############
             int size = nets.Count();
             for (int i=0;i< desiredsize-size; i++)
                 {
-                NeuralNet father = nets[rand.Next(0,size)]; //Performance was better when selecting the parents as the top #1 and #2. HOWEVER, this will render the previously-selected underdogs useless; as they will have 0 chance of passing down their gene. (Unless the offspring gen. completely screws up and somehow the underdog makes in into top #2 in the next evolution)
-                NeuralNet mother = nets[rand.Next(0,size)];
+                NeuralNet father = nets[0]; //Performance was better when selecting the parents as the top #1 and #2. HOWEVER, this will render the previously-selected underdogs useless; as they will have 0 chance of passing down their gene. (Unless the offspring gen. completely screws up and somehow the underdog makes in into top #2 in the next evolution)
+                NeuralNet mother = nets[1];
                 NeuralNet offspring = new NeuralNet(NODECONFIG);
                 offspring.GenerateWeights(rand); //I DON'T LIKE THIS. BUT THIS WILL DO FOR NOW...
                 
@@ -147,7 +153,7 @@ Console.WriteLine("Population of size " + count + " create OK!");
             return ret;
             }
 
-        public List<NeuralNet> SortFitness(List<NeuralNet> nets)
+        private List<NeuralNet> SortFitness(List<NeuralNet> nets,int generation, MnistTrainImages images, MnistTrainLabels labels)
             {
             //Create list of nets to order in fitness
             for (int i = 0; i < nets.Count(); i++)
@@ -155,7 +161,7 @@ Console.WriteLine("Population of size " + count + " create OK!");
 #if DEBUG
 Console.WriteLine("\n" + "Testing network #" + i);
 #endif
-                EvaluateFitness(nets[i]);
+                EvaluateFitness(nets[i], generation, images, labels);
                 }
 
             //nets = nets.OrderBy(o => o.FITNESS).ToList(); //REMEBER THE SUFFERING BECAUSE OF THIS!!!
@@ -163,27 +169,31 @@ Console.WriteLine("\n" + "Testing network #" + i);
             return nets.OrderBy(o => o.FITNESS).ToList(); //You know what? a List<T> is also a class. It is also automatically passed by reference to methods.
             }
 
-        private void EvaluateFitness(NeuralNet net) //Probably the 'Main' part of the class; The real 'running & testing happens here'
+        private void EvaluateFitness(NeuralNet net, int generation, MnistTrainImages images, MnistTrainLabels labels) //Probably the 'Main' part of the class; The real 'running & testing happens here'
             {
             //DUE TO SORTING ISSUES, THIS FUNCTION WILL ASSIGN THE VALUE TO THE NETWORK'S PUBLIC VARIABLE - [FITNESS]. 
-
-            //XOR - SPECIFIC CODE!!!
             double diff = 0;
 #if DEBUG
 Console.WriteLine("Dataset count: " + NUMBER_OF_DATASETS);
 #endif
-            for (int i = 0; i < NUMBER_OF_DATASETS; i++)
+            List<double> outcome = net.Run(images.GetImage(generation).ToList());
+            //Console.WriteLine(outcome[2]);
+            for (int i = 0; i < 10; i++)
                 {
-                List<double> outcome = net.Run(XOR_INPUT.GetRow(i).ToList());
-#if DEBUG
-Console.WriteLine("Result difference: " + (XOR_IDEAL[i, 0] - outcome[0]));
-#endif
-                //diff += Math.Abs(XOR_IDEAL[i, 0] - outcome[0]);
-                //JUST LIKE THE STANDARD DEVIATION PROBLEM, USING ABS. VALUES MAY NOT BE A GOOD CHOICE.
-                diff += Math.Pow(XOR_IDEAL[i, 0] - outcome[0], 2);
+                if (i == labels.GetLabel(generation))
+                    {
+                    //Console.WriteLine("MATCH!");
+                    diff += Math.Pow(1-outcome[i]/(28*28),2);
+                    }
+                
+                else
+                    {
+                    diff += Math.Pow(outcome[i]/(28*28),2);
+                    }
                 }
+            
             //SMALLER THE BETTER!
-            net.FITNESS = (diff / NUMBER_OF_DATASETS); //Average difference
+            net.FITNESS = (diff); //Average difference
 #if DEBUG
 Console.WriteLine("Result Average Fitness: " + net.FITNESS);
 #endif
@@ -195,8 +205,8 @@ Console.WriteLine("Result Average Fitness: " + net.FITNESS);
                 {
                 fitness += nets[i].FITNESS;
                 }
-            //Console.WriteLine("\n######POPULATION AVG. FITNESS: " + fitness/POPULATION_SIZE + " ######");
-            Console.WriteLine(fitness / POPULATION_SIZE);
+            Console.WriteLine("\n######POPULATION AVG. FITNESS: " + fitness/POPULATION_SIZE + " ######");
+            //Console.WriteLine(fitness / POPULATION_SIZE);
             }
         }
     }
