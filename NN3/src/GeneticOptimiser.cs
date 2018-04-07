@@ -62,7 +62,7 @@ Console.WriteLine("##########################GENERATION #" + i + "##############
                 }
             for (int i = 0; i < 10; i++)
                 {
-                Console.WriteLine(i + ": " + tmp[i]/(28*28));
+                Console.WriteLine(i + ": " + tmp[i]);
                 }
             }
 
@@ -183,12 +183,12 @@ Console.WriteLine("Dataset count: " + NUMBER_OF_DATASETS);
                 if (i == labels.GetLabel(generation))
                     {
                     //Console.WriteLine("MATCH!");
-                    diff += Math.Pow(1-outcome[i]/(28*28),2);
+                    diff += Math.Pow(1-outcome[i],2);
                     }
                 
                 else
                     {
-                    diff += Math.Pow(outcome[i]/(28*28),2);
+                    diff += Math.Pow(outcome[i],2);
                     }
                 }
             

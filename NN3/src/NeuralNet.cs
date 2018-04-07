@@ -12,6 +12,10 @@ namespace NN3.src
     {
     class NeuralNet
         {
+        public double FITNESS;
+
+        public bool ACTIVATION = true;
+
         public int NUMBER_OF_LAYERS;
         public List<int> NUMBER_OF_NODES = new List<int>();
 
@@ -27,10 +31,6 @@ namespace NN3.src
             {
             return MATRICES[mat][row][col];
             }
-
-        public double FITNESS;
-
-        public bool ACTIVATION = false;
 
         public NeuralNet(int[] nodes)
             {
@@ -110,6 +110,7 @@ Console.WriteLine("Weight config: " + w);
             {
             for (int i = 0; i < mat.Count(); i++)
                 {
+                //Console.WriteLine("W.Sum: "+ mat[i]);
                 mat[i] = 1/(1 + Math.Exp(mat[i]*-1));   //Sigmoid, 0 ~ 1
                 //mat[i] = Math.Tanh(mat[i]);   //Tanh, -1 ~ 1
                 }
