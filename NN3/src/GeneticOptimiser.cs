@@ -12,13 +12,13 @@ namespace NN3.src
 
         public static int[] NODECONFIG = new int[] { 28*28, 10 };
         public static int POPULATION_SIZE = 30;
-        public static int GENERATIONS = 300; //This is static; the Test DB has 60000 samples!
+        public static int GENERATIONS = 50; //This is static; the Test DB has 60000 samples!
 
         //NOT THE CHANCES OF MUTATION/CROSSOVER HAPPENING ENTIRELY ACROSS A POPULATION; BUT RATHER THE CHANCE OF AN INDIVIDUAL NODE UNDERGOING MUTAION/CROSSOVER.
         public static double MUTATE_CHANCE = 0.2;
         public static double CROSSOVER_CHANCE = 0.5;    
         public static double UNDERDOG_SURVIVAL = 0.05;   //Increase diversity
-        public static int SURVIVORS = 3;                //Must be larger than 0; but equal or less than the population size.
+        public static int SURVIVORS = 10;                //Must be larger than 0; but equal or less than the population size.
 
         /*ONLY WEIGHTS ARE EVOLVED; THE TOPOLOGY IS UNTOUCHED THROUGHOUT THE ENTIRE PROCESS*/
 
@@ -43,15 +43,17 @@ Console.WriteLine("##########################GENERATION #" + i + "##############
                 //optimiser.EvaluatePopulation(pop);
                 }
             Console.WriteLine("FINISHED!");
-            optimiser.TestBestNetwork(pop,trainimages,trainlabels);
+            optimiser.TestBestNetwork(pop,trainimages,trainlabels,0);
+            optimiser.TestBestNetwork(pop, trainimages, trainlabels, 99);
+            optimiser.TestBestNetwork(pop, trainimages, trainlabels, 22);
             Console.ReadLine();
             }
 
-        public void TestBestNetwork(List<NeuralNet> nets, MnistTrainImages images, MnistTrainLabels labels)
+        public void TestBestNetwork(List<NeuralNet> nets, MnistTrainImages images, MnistTrainLabels labels, int index)
             {
-            List<double> tmp = nets[0].Run(images.GetImage(100).ToList());
-            List<double> DB = images.GetImage(100).ToList();
-            Console.WriteLine("####FINAL TEST####\nInput: " + labels.GetLabel(100));
+            List<double> tmp = nets[0].Run(images.GetZscores(index).ToList());
+            List<double> DB = images.GetImage(index).ToList();
+            Console.WriteLine("\n\n####TEST####\nInput: " + labels.GetLabel(index));
             for (int i = 0; i < 28; i++)
                 {
                 for (int j = 0; j < 28; j++)
@@ -64,6 +66,18 @@ Console.WriteLine("##########################GENERATION #" + i + "##############
                 {
                 Console.WriteLine(i + ": " + tmp[i]);
                 }
+            double max = tmp[0];
+            int maxindex = 0;
+            for (int i = 0; i < 10; i++)
+                {
+                if (tmp[i] > max)
+                    {
+                    max = tmp[i];
+                    maxindex = i;
+                    }
+             
+                }
+            Console.WriteLine("looks like a "+ maxindex);
             }
 
         public List<NeuralNet> Evolve(List<NeuralNet> nets, int generation, MnistTrainImages images, MnistTrainLabels labels)
@@ -161,7 +175,14 @@ Console.WriteLine("Population of size " + count + " create OK!");
 #if DEBUG
 Console.WriteLine("\n" + "Testing network #" + i);
 #endif
-                EvaluateFitness(nets[i], generation, images, labels);
+                //EvaluateFitness(nets[i], generation, images, labels);
+
+                List<int> indexes = new List<int>();
+                for (int j = 0; j < 100; j++)
+                    {
+                    indexes.Add(rand.Next(50000));
+                    }
+                EvaluateFitnessExperimental(nets[i], indexes, images, labels);
                 }
 
             //nets = nets.OrderBy(o => o.FITNESS).ToList(); //REMEBER THE SUFFERING BECAUSE OF THIS!!!
@@ -171,33 +192,44 @@ Console.WriteLine("\n" + "Testing network #" + i);
 
         private void EvaluateFitness(NeuralNet net, int generation, MnistTrainImages images, MnistTrainLabels labels) //Probably the 'Main' part of the class; The real 'running & testing happens here'
             {
-            //DUE TO SORTING ISSUES, THIS FUNCTION WILL ASSIGN THE VALUE TO THE NETWORK'S PUBLIC VARIABLE - [FITNESS]. 
-            double diff = 0;
-#if DEBUG
-Console.WriteLine("Dataset count: " + NUMBER_OF_DATASETS);
-#endif
+            //HMMM. CROSS ENROPY... 
+            double crossentropy = 0;
             List<double> outcome = net.Run(images.GetImage(generation).ToList());
-            //Console.WriteLine(outcome[2]);
-            for (int i = 0; i < 10; i++)
-                {
-                if (i == labels.GetLabel(generation))
-                    {
-                    //Console.WriteLine("MATCH!");
-                    diff += Math.Pow(1-outcome[i],2);
-                    }
-                
-                else
-                    {
-                    diff += Math.Pow(outcome[i],2);
-                    }
-                }
+
+            crossentropy = -1 * Math.Log(outcome[labels.GetLabel(generation)]);
             
             //SMALLER THE BETTER!
-            net.FITNESS = (diff); //Average difference
-#if DEBUG
-Console.WriteLine("Result Average Fitness: " + net.FITNESS);
-#endif
+            net.FITNESS = crossentropy; 
+
             }
+
+        private void EvaluateFitnessExperimental(NeuralNet net, List<int> indexes, MnistTrainImages images, MnistTrainLabels labels) //Probably the 'Main' part of the class; The real 'running & testing happens here'
+            {
+            double crossentropy = 0;
+            for (int i = 0; i < indexes.Count(); i++)
+                {
+                
+                List<double> outcome = net.Run(images.GetZscores(indexes[i]).ToList());
+                //crossentropy += -1 * Math.Log(outcome[labels.GetLabel(indexes[i])]);
+                
+                for (int j = 0; j < 10; j++)
+                    {
+                    if (j == labels.GetLabel(indexes[i]))
+                        {
+                        crossentropy += Math.Pow(1 - outcome[j], 2);
+                        }
+                    else
+                        {
+                        crossentropy += Math.Pow(outcome[j], 2);
+                        }
+                    
+                    }
+                
+                }
+            //SMALLER THE BETTER!
+            net.FITNESS = crossentropy/indexes.Count();
+            }
+
         private void EvaluatePopulation(List<NeuralNet> nets)
             {
             double fitness = 0;

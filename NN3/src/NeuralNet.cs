@@ -14,7 +14,7 @@ namespace NN3.src
         {
         public double FITNESS;
 
-        public bool ACTIVATION = true;
+        public bool ACTIVATION = false;
 
         public int NUMBER_OF_LAYERS;
         public List<int> NUMBER_OF_NODES = new List<int>();
@@ -57,7 +57,9 @@ namespace NN3.src
                     for (int k = 0; k < NUMBER_OF_NODES[i + 1]; k++)
                         {
                         //double w = (rand.NextDouble()-0.5)*2; //For tanh
-                        double w = rand.NextDouble();   //For sigmoid
+                        //double w = rand.NextDouble();   //For sigmoid
+                        double w = (rand.NextDouble() - 0.5) * Math.Sqrt(6 / (28 * 28 + 10));
+                       
                         kList.Add(w);
 #if DEBUG
 Console.WriteLine("Weight config: " + w);
@@ -78,8 +80,10 @@ Console.WriteLine("Weight config: " + w);
             for (int i = 0; i < NUMBER_OF_LAYERS - 1; i++)
                 {
                 ret = Multi(ref ret, MATRICES[i]);
-                if (ACTIVATION) { Activate(ref ret); }
+                if (ACTIVATION) { Activate(ref ret); } //CURRENTLY NO HIDDEN LAYERS; STRAIGHT TO SOFTMAX
+                
                 }
+            ret = Softmax(ref ret);
             return ret;
             }
         /*
@@ -115,6 +119,25 @@ Console.WriteLine("Weight config: " + w);
                 //mat[i] = Math.Tanh(mat[i]);   //Tanh, -1 ~ 1
                 }
             }
+
+        private List<double> Softmax(ref List<double> mat)
+            {
+            List<double> ret = new List<double>();
+            for (int i = 0; i < mat.Count(); i++)
+                {
+                double y = 0;
+                for (int j = 0; j < mat.Count(); j++)
+                    {
+                    y += Math.Exp(mat[j]+1);
+                    }
+                if (y == 0)
+                    { throw new System.InvalidOperationException("Cannot allow division by 0 in Softmax!"); }
+                ret.Add(Math.Exp(mat[i]+1)/y);
+                }
+            return ret;
+            }
+
+        
         }
     }
 
